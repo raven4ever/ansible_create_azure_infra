@@ -1,0 +1,46 @@
+---
+
+- name: Cleanup resource group
+  hosts: localhost
+  connection: local
+  gather_facts: False
+
+  tasks:
+    - name: Delete VMs
+      azure_rm_virtualmachine:
+        resource_group: "{{ resource_group }}"
+        name: "dk8sTrainingVM4{{item}}"
+        state: absent
+      loop: "{{ students }}"
+
+    - name: Delete NICs
+      azure_rm_networkinterface:
+        resource_group: "{{ resource_group }}"
+        name: "dk8s_training_NIC_{{item}}"
+        state: absent
+      loop: "{{ students }}"
+
+    - name: Delete Pub IPs
+      azure_rm_publicipaddress:
+        resource_group: "{{ resource_group }}"
+        name: "dk8s_training_pubip_{{ item }}"
+        state: absent
+      loop: "{{ students }}"
+
+    - name: Delete security group
+      azure_rm_securitygroup:
+        resource_group: "{{ resource_group }}"
+        name: dk8s_training_sec_group
+        state: absent
+
+    - name: Delete subnet
+      azure_rm_subnet:
+        resource_group: "{{ resource_group }}"
+        name: dk8s_training_subnet
+        state: absent
+
+    - name: Delete VNET
+      azure_rm_virtualnetwork:
+        resource_group: "{{ resource_group }}"
+        name: dk8s_training_vnet
+        state: absent
