@@ -37,6 +37,7 @@
       azure_rm_subnet:
         resource_group: "{{ resource_group }}"
         name: dk8s_training_subnet
+        virtual_network: dk8s_training_vnet
         state: absent
 
     - name: Delete VNET
