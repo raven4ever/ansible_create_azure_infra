@@ -37,46 +37,51 @@
       azure_rm_publicipaddress:
         resource_group: "{{ resource_group }}"
         allocation_method: Static
-        name: dk8s_training_pubip
+        name: "dk8s_training_pubip_{{ item }}"
         tags: "{{ object_tags }}"
       register: output_ip_address
+      loop: "{{ students }}"
 
     - name: SSH connection string
       debug:
-        msg: "SSH string: ssh {{ master_username }}@{{ output_ip_address.state.ip_address }}"
+        msg: "ssh {{item}}@{{ output_ip_address.results | selectattr('item', 'equalto', item) | map(attribute='state') | list | map(attribute='ip_address') | list | first }}"
+      loop: "{{ students }}"
 
     - name: Create virtual network interface card
       azure_rm_networkinterface:
         resource_group: "{{ resource_group }}"
-        name: dk8s_training_NIC
+        name: "dk8s_training_NIC_{{item}}"
         virtual_network: dk8s_training_vnet
         subnet: dk8s_training_subnet
-        public_ip_name: dk8s_training_pubip
+        public_ip_name: "dk8s_training_pubip_{{ item }}"
         security_group: dk8s_training_sec_group
         tags: "{{ object_tags }}"
+      loop: "{{ students }}"
 
     - name: Create VM
       azure_rm_virtualmachine:
         resource_group: "{{ resource_group }}"
-        name: dk8sTrainingVM1
+        name: "dk8sTrainingVM4{{item}}"
         vm_size: Standard_DS1_v2
-        admin_username: "{{ master_username }}"
+        admin_username: "{{ item }}"
         admin_password: "{{ master_password }}"
         ssh_password_enabled: true
-        network_interfaces: dk8s_training_NIC
+        network_interfaces: "dk8s_training_NIC_{{item}}"
         image:
           offer: UbuntuServer
           publisher: Canonical
           sku: 18.04-LTS
           version: latest
           tags: "{{ object_tags }}"
+      loop: "{{ students }}"
 
     - name: Add the IP to ansible group
       add_host:
-        hostname: "{{ output_ip_address.state.ip_address }}"
+        hostname: "{{ output_ip_address.results | selectattr('item', 'equalto', item) | map(attribute='state') | list | map(attribute='ip_address') | list | first }}"
         groups: created
-        ansible_ssh_user: "{{ master_username }}"
+        ansible_ssh_user: "{{ item }}"
         ansible_ssh_pass: "{{ master_password }}"
+      loop: "{{ students }}"
 
 #########################
 - name: Configure software on the created VMs
@@ -108,7 +113,7 @@
           - containerd.io
         state: latest
 
-    - name: Install K8S & kubectl
+    - name: Install K8S
       snap:
         name: microk8s
         state: present

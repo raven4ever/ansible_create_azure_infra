@@ -7,7 +7,6 @@ students:
   - student2
 
 master_password: Ansible123#
-master_username: adrian
 
 object_tags:
   scope: docker_k8s_training
