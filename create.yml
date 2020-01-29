@@ -43,7 +43,7 @@
 
     - name: SSH connection string
       debug:
-        msg: "SSH string: {{ master_username }}@{{ output_ip_address.state.ip_address }}"
+        msg: "SSH string: ssh {{ master_username }}@{{ output_ip_address.state.ip_address }}"
 
     - name: Create virtual network interface card
       azure_rm_networkinterface:
