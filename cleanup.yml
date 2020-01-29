@@ -13,34 +13,34 @@
         state: absent
       loop: "{{ students }}"
 
-    - name: Delete NICs
+    - name: Delete virtual interface cards
       azure_rm_networkinterface:
         resource_group: "{{ resource_group }}"
         name: "dk8s_training_NIC_{{item}}"
         state: absent
       loop: "{{ students }}"
 
-    - name: Delete Pub IPs
+    - name: Delete Public IP addresses
       azure_rm_publicipaddress:
         resource_group: "{{ resource_group }}"
         name: "dk8s_training_pubip_{{ item }}"
         state: absent
       loop: "{{ students }}"
 
-    - name: Delete security group
+    - name: Delete Network Security Group
       azure_rm_securitygroup:
         resource_group: "{{ resource_group }}"
         name: dk8s_training_sec_group
         state: absent
 
-    - name: Delete subnet
+    - name: Delete the subnet
       azure_rm_subnet:
         resource_group: "{{ resource_group }}"
         name: dk8s_training_subnet
         virtual_network: dk8s_training_vnet
         state: absent
 
-    - name: Delete VNET
+    - name: Delete the virtual network
       azure_rm_virtualnetwork:
         resource_group: "{{ resource_group }}"
         name: dk8s_training_vnet

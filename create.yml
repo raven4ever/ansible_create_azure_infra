@@ -5,21 +5,21 @@
   connection: local
 
   tasks:
-    - name: Create virtual network
+    - name: Create the virtual network
       azure_rm_virtualnetwork:
         resource_group: "{{ resource_group }}"
         name: dk8s_training_vnet
         address_prefixes: "10.0.0.0/16"
         tags: "{{ object_tags }}"
 
-    - name: Add subnet
+    - name: Create the subnet
       azure_rm_subnet:
         resource_group: "{{ resource_group }}"
         name: dk8s_training_subnet
         address_prefix: "10.0.1.0/24"
         virtual_network: dk8s_training_vnet
 
-    - name: Create Network Security Group that allows SSH
+    - name: Create Network Security Group
       azure_rm_securitygroup:
         resource_group: "{{ resource_group }}"
         name: dk8s_training_sec_group
@@ -33,7 +33,7 @@
         tags: "{{ object_tags }}"
 
     # for each VM that needs to be created
-    - name: Create public IP address
+    - name: Create Public IP addresses
       azure_rm_publicipaddress:
         resource_group: "{{ resource_group }}"
         allocation_method: Static
@@ -42,12 +42,12 @@
       register: output_ip_address
       loop: "{{ students }}"
 
-    - name: SSH connection string
+    - name: SSH connection strings
       debug:
         msg: "ssh {{item}}@{{ output_ip_address.results | selectattr('item', 'equalto', item) | map(attribute='state') | list | map(attribute='ip_address') | list | first }}"
       loop: "{{ students }}"
 
-    - name: Create virtual network interface card
+    - name: Create virtual interface cards
       azure_rm_networkinterface:
         resource_group: "{{ resource_group }}"
         name: "dk8s_training_NIC_{{item}}"
@@ -58,7 +58,7 @@
         tags: "{{ object_tags }}"
       loop: "{{ students }}"
 
-    - name: Create VM
+    - name: Create VMs
       azure_rm_virtualmachine:
         resource_group: "{{ resource_group }}"
         name: "dk8sTrainingVM4{{item}}"
@@ -75,7 +75,7 @@
           tags: "{{ object_tags }}"
       loop: "{{ students }}"
 
-    - name: Add the IP to ansible group
+    - name: Add the new VMs to the Ansible group
       add_host:
         hostname: "{{ output_ip_address.results | selectattr('item', 'equalto', item) | map(attribute='state') | list | map(attribute='ip_address') | list | first }}"
         groups: created
@@ -119,7 +119,7 @@
         state: present
         classic: True
 
-    - name: Add alias for kubectl
+    - name: Install kubectl
       lineinfile:
           dest: "/home/{{ ansible_ssh_user }}/.bash_aliases"
           create: True

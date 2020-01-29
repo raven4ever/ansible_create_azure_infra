@@ -1,5 +1,5 @@
 # Azure VM creation
-This Ansible playbook creates a number of VMs in a pre-defined Azure resource group.
+This Ansible playbook creates a number of Ubuntu VMs in a pre-defined Azure resource group.
 
 ## Requirements
 On the Ansible machine the package **sshpass** must be installed.
@@ -16,7 +16,9 @@ export AZURE_TENANT="xxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
 ```
 
 - Using the `az login` command
-Install the Azure CLI utility using [this](https://docs.microsoft.com/en-us/cli/azure/install-azure-cli?view=azure-cli-latest) page.
+
+Install the Azure CLI utility using [these instructions](https://docs.microsoft.com/en-us/cli/azure/install-azure-cli?view=azure-cli-latest).
+
 After the installation, login with your Azure credentials and select the subscription you want to use.
 
 ## Configuration
