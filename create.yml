@@ -1,0 +1,137 @@
+---
+
+- name: Create student VMs in Azure
+  hosts: localhost
+  connection: local
+
+  tasks:
+    - name: Create virtual network
+      azure_rm_virtualnetwork:
+        resource_group: "{{ resource_group }}"
+        name: dk8s_training_vnet
+        address_prefixes: "10.0.0.0/16"
+        tags: "{{ object_tags }}"
+
+    - name: Add subnet
+      azure_rm_subnet:
+        resource_group: "{{ resource_group }}"
+        name: dk8s_training_subnet
+        address_prefix: "10.0.1.0/24"
+        virtual_network: dk8s_training_vnet
+
+    - name: Create Network Security Group that allows SSH
+      azure_rm_securitygroup:
+        resource_group: "{{ resource_group }}"
+        name: dk8s_training_sec_group
+        rules:
+          - name: SSH
+            protocol: Tcp
+            destination_port_range: 22
+            access: Allow
+            priority: 1001
+            direction: Inbound
+        tags: "{{ object_tags }}"
+
+    # for each VM that needs to be created
+    - name: Create public IP address
+      azure_rm_publicipaddress:
+        resource_group: "{{ resource_group }}"
+        allocation_method: Static
+        name: dk8s_training_pubip
+        tags: "{{ object_tags }}"
+      register: output_ip_address
+
+    - name: SSH connection string
+      debug:
+        msg: "SSH string: {{ master_username }}@{{ output_ip_address.state.ip_address }}"
+
+    - name: Create virtual network interface card
+      azure_rm_networkinterface:
+        resource_group: "{{ resource_group }}"
+        name: dk8s_training_NIC
+        virtual_network: dk8s_training_vnet
+        subnet: dk8s_training_subnet
+        public_ip_name: dk8s_training_pubip
+        security_group: dk8s_training_sec_group
+        tags: "{{ object_tags }}"
+
+    - name: Create VM
+      azure_rm_virtualmachine:
+        resource_group: "{{ resource_group }}"
+        name: dk8sTrainingVM1
+        vm_size: Standard_DS1_v2
+        admin_username: "{{ master_username }}"
+        admin_password: "{{ master_password }}"
+        ssh_password_enabled: true
+        network_interfaces: dk8s_training_NIC
+        image:
+          offer: UbuntuServer
+          publisher: Canonical
+          sku: 18.04-LTS
+          version: latest
+          tags: "{{ object_tags }}"
+
+    - name: Add the IP to ansible group
+      add_host:
+        hostname: "{{ output_ip_address.state.ip_address }}"
+        groups: created
+        ansible_ssh_user: "{{ master_username }}"
+        ansible_ssh_pass: "{{ master_password }}"
+
+#########################
+- name: Configure software on the created VMs
+  hosts: created
+  gather_facts: False
+  become: True
+
+  tasks:
+    - name: Wait for hosts to be active
+      wait_for_connection:
+        timeout: 900
+        sleep: 2
+
+    - name: Update everything
+      apt:
+        upgrade: True
+        update_cache: True
+
+    - name: Add Docker repo key
+      apt_key:
+        url: https://download.docker.com/linux/ubuntu/gpg
+        state: present
+
+    - name: Add Docker repository
+      apt_repository:
+        repo: "deb [arch=amd64] https://download.docker.com/linux/ubuntu bionic stable"
+        state: present
+
+    - name: Install Docker
+      apt:
+        name:
+          - docker-ce
+          - docker-ce-cli
+          - containerd.io
+        state: latest
+
+    - name: Install K8S & kubectl
+      snap:
+        name: microk8s
+        state: present
+        classic: True
+
+    - name: Add alias for kubectl
+      lineinfile:
+          dest: "/home/{{ ansible_ssh_user }}/.bash_aliases"
+          create: True
+          mode: 0644
+          line: "alias kubectl='microk8s.kubectl'"
+          regexp: "^alias kubectl="
+
+    - name: Add user to docker & microk8s groups
+      user:
+        name: "{{ ansible_ssh_user }}"
+        groups: docker,microk8s
+        append: True
+
+    - name: Enable microk8s add-ons
+      shell: microk8s.enable dns dashboard

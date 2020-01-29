@@ -1,0 +1,15 @@
+---
+
+resource_group: CDaaS_Test_ResourceGovernorACR
+
+students:
+  - student1
+  - student2
+
+master_password: Ansible123#
+master_username: adrian
+
+object_tags:
+  scope: docker_k8s_training
+  owner: nu39gk
+  createDate: "{{ ansible_date_time.date }}"
