@@ -17,9 +17,20 @@ export AZURE_TENANT="xxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
 
 - Using the `az login` command
 
-Install the Azure CLI utility using [these instructions](https://docs.microsoft.com/en-us/cli/azure/install-azure-cli?view=azure-cli-latest).
+Install the Azure CLI utility using [these instructions](https://docs.microsoft.com/en-us/cli/azure/install-azure-cli?view=azure-cli-latest). After the installation, login with your Azure credentials and select the subscription you want to use.
 
-After the installation, login with your Azure credentials and select the subscription you want to use.
+Using [these instructions](https://docs.ansible.com/ansible/latest/scenario_guides/guide_azure.html) install the dedicated Azure modules to let Ansible read the Azure CLI configuration.
+
+### Executing the playbook
+To create all the resources:
+```
+ansible-playbook create.yml
+```
+
+To delete all the resources:
+```
+ansible-playbook cleanup.yml
+```
 
 ## Configuration
 - `resource_group`: the target Azure resource group where all the objects will reside;
