@@ -85,11 +85,6 @@
   become: True
 
   tasks:
-    - name: Wait for hosts to be active
-      wait_for_connection:
-        timeout: 900
-        sleep: 2
-
     - name: Update everything
       apt:
         upgrade: True
