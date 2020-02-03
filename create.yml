@@ -30,6 +30,18 @@
             access: Allow
             priority: 1001
             direction: Inbound
+          - name: HTTP
+            protocol: Tcp
+            destination_port_range: 80
+            access: Allow
+            priority: 1011
+            direction: Inbound
+          - name: Port_8080
+            protocol: Tcp
+            destination_port_range: 8080
+            access: Allow
+            priority: 1021
+            direction: Inbound
         tags: "{{ object_tags }}"
 
     # for each VM that needs to be created
